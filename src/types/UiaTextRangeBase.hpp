@@ -137,7 +137,7 @@ namespace Microsoft::Console::Types
         // NOTE: _start is inclusive, but _end is exclusive
         COORD _start{};
         COORD _end{};
-        bool _blockRange;
+        bool _blockRange{ false };
 
         // This is used by tracing to extract the text value
         // that the UiaTextRange currently encompasses.
@@ -150,6 +150,7 @@ namespace Microsoft::Console::Types
 
         const unsigned int _getViewportHeight(const SMALL_RECT viewport) const noexcept;
         const Viewport _getBufferSize() const noexcept;
+        const til::point _getDocumentEnd() const noexcept;
 
         void _getBoundingRect(const til::rectangle textRect, _Inout_ std::vector<double>& coords) const;
 
@@ -176,6 +177,11 @@ namespace Microsoft::Console::Types
                                     _In_ const TextPatternRangeEndpoint endpoint,
                                     gsl::not_null<int*> const pAmountMoved,
                                     _In_ const bool preventBufferEnd = false) noexcept;
+
+        std::function<bool(const TextAttribute&)> _getAttrVerificationFn(TEXTATTRIBUTEID attributeId, VARIANT val) const;
+        std::function<bool(const TextAttribute&)> _getAttrVerificationFnForFirstAttr(TEXTATTRIBUTEID attributeId, VARIANT* pRetVal) const;
+
+        COORD _getInclusiveEnd();
 
 #ifdef UNIT_TESTING
         friend class ::UiaTextRangeTests;
