@@ -17,6 +17,8 @@
 #include "../../cascadia/terminalcore/ITerminalApi.hpp"
 #include "../../cascadia/terminalcore/ITerminalInput.hpp"
 
+#include <til/gate.h>
+
 static constexpr std::wstring_view linkPattern{ LR"(\b(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|$!:,.;]*[A-Za-z0-9+&@#/%=~_|$])" };
 static constexpr size_t TaskbarMinProgress{ 10 };
 
@@ -52,6 +54,43 @@ class Microsoft::Terminal::Core::Terminal final :
     public Microsoft::Console::Types::IUiaData
 {
 public:
+    class InbalancedMutex
+    {
+        void lock() noexcept
+        {
+            _lock.lock();
+        }
+
+        void unlock() noexcept
+        {
+            _lock.unlock();
+        }
+
+        void lock_shared() noexcept
+        {
+            _lock.lock_shared();
+        }
+
+        void unlock_shared() noexcept
+        {
+            _lock.unlock_shared();
+        }
+
+        void lock_secondary() noexcept
+        {
+            _lock.lock();
+        }
+
+        void unlock_secondary() noexcept
+        {
+            _lock.unlock();
+        }
+
+    private:
+        std::shared_mutex _lock;
+        til::gate_relaxed _gate{ true };
+    };
+
     Terminal();
     ~Terminal(){};
     Terminal(const Terminal&) = default;
@@ -75,8 +114,8 @@ public:
     // WritePastedText goes directly to the connection
     void WritePastedText(std::wstring_view stringView);
 
-    [[nodiscard]] std::shared_lock<std::shared_mutex> LockForReading();
-    [[nodiscard]] std::unique_lock<std::shared_mutex> LockForWriting();
+    [[nodiscard]] std::unique_lock<til::ticket_lock> LockForReading();
+    [[nodiscard]] std::unique_lock<til::ticket_lock> LockForWriting();
 
     short GetBufferHeight() const noexcept;
 
@@ -293,7 +332,7 @@ private:
     SelectionExpansionMode _multiClickSelectionMode;
 #pragma endregion
 
-    std::shared_mutex _readWriteLock;
+    til::ticket_lock _readWriteLock;
 
     // TODO: These members are not shared by an alt-buffer. They should be
     //      encapsulated, such that a Terminal can have both a main and alt buffer.

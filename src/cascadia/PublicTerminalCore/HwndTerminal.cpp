@@ -326,7 +326,7 @@ IRawElementProviderSimple* HwndTerminal::_GetUiaProvider() noexcept
 {
     if (nullptr == _uiaProvider && !_uiaProviderInitialized)
     {
-        std::unique_lock<std::shared_mutex> lock;
+        decltype(_terminal->LockForWriting()) lock;
         try
         {
 #pragma warning(suppress : 26441) // The lock is named, this appears to be a false positive
