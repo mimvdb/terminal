@@ -101,42 +101,41 @@ namespace winrt::Microsoft::Terminal::Settings::Model::implementation
     {
         TIconSource iconSource{ nullptr };
 
-        if (iconPath.size() != 0)
+        if (iconPath.size() > 2)
         {
             const auto expandedIconPath{ _expandIconPath(iconPath) };
             iconSource = _getColoredBitmapIcon<TIconSource>(expandedIconPath);
-
-            // If we fail to set the icon source using the "icon" as a path,
-            // let's try it as a symbol/emoji.
-            //
-            // Anything longer than 2 wchar_t's _isn't_ an emoji or symbol, so
-            // don't do this if it's just an invalid path.
-            if (!iconSource && iconPath.size() <= 2)
+        }
+        // If we fail to set the icon source using the "icon" as a path,
+        // let's try it as a symbol/emoji.
+        //
+        // Anything longer than 2 wchar_t's _isn't_ an emoji or symbol, so
+        // don't do this if it's just an invalid path.
+        else if (iconPath.size() != 0)
+        {
+            try
             {
-                try
-                {
-                    FontIconSource<TIconSource>::type icon;
-                    const wchar_t ch = iconPath[0];
+                FontIconSource<TIconSource>::type icon;
+                const wchar_t ch = iconPath[0];
 
-                    // The range of MDL2 Icons isn't explicitly defined, but
-                    // we're using this based off the table on:
-                    // https://docs.microsoft.com/en-us/windows/uwp/design/style/segoe-ui-symbol-font
-                    const bool isMDL2Icon = ch >= L'\uE700' && ch <= L'\uF8FF';
-                    if (isMDL2Icon)
-                    {
-                        icon.FontFamily(winrt::Windows::UI::Xaml::Media::FontFamily{ L"Segoe MDL2 Assets" });
-                    }
-                    else
-                    {
-                        // Note: you _do_ need to manually set the font here.
-                        icon.FontFamily(winrt::Windows::UI::Xaml::Media::FontFamily{ L"Segoe UI" });
-                    }
-                    icon.FontSize(12);
-                    icon.Glyph(iconPath);
-                    iconSource = icon;
+                // The range of MDL2 Icons isn't explicitly defined, but
+                // we're using this based off the table on:
+                // https://docs.microsoft.com/en-us/windows/uwp/design/style/segoe-ui-symbol-font
+                const bool isMDL2Icon = ch >= L'\uE700' && ch <= L'\uF8FF';
+                if (isMDL2Icon)
+                {
+                    icon.FontFamily(winrt::Windows::UI::Xaml::Media::FontFamily{ L"Segoe MDL2 Assets" });
                 }
-                CATCH_LOG();
+                else
+                {
+                    // Note: you _do_ need to manually set the font here.
+                    icon.FontFamily(winrt::Windows::UI::Xaml::Media::FontFamily{ L"Segoe UI" });
+                }
+                icon.FontSize(12);
+                icon.Glyph(iconPath);
+                iconSource = icon;
             }
+            CATCH_LOG();
         }
         if (!iconSource)
         {
