@@ -8,7 +8,7 @@
 
     <!--  Merge SettingContainerStyle here to give every page access to the SettingContainer  -->
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="SettingContainerStyle.xaml" />
+        <ResourceDictionary Source="ms-appx:///Microsoft.Terminal.Settings.Editor/SettingContainerStyle.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <ResourceDictionary.ThemeDictionaries>
